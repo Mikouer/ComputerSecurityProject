@@ -1,0 +1,18 @@
+{
+    "id": "test123",
+    "password": "PASSWORD123",
+    "server":
+        {
+            "ip": "SERVER_IP123",
+            "port": "PORT123"
+        },
+    "actions": {
+        "delay": "DELAY IN SECONDS",
+        "steps": [
+            "ACTION 1",
+            "ACTION 2",
+            "..."
+        ]
+    }
+}
+  
