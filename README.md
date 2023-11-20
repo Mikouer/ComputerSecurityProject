@@ -2,8 +2,8 @@
 ## Group memebers
 + i6226172 Zijian Dong
 + i6267501 Zhefan Cheng
-+          Cui qi
-+          Yasune 
++ i6288444 Cui qi
++ i6283477 Yasune Notermans
 
 ## So far we done
 
