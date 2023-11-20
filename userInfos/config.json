@@ -1,18 +1,17 @@
 {
     "id": "test123",
     "password": "PASSWORD123",
-    "server":
-        {
-            "ip": "SERVER_IP123",
-            "port": "PORT123"
-        },
+    "server": {
+        "ip": "127.0.0.1",
+        "port": 12345
+    },
     "actions": {
-        "delay": "DELAY IN SECONDS",
+        "delay": 1,
         "steps": [
-            "ACTION 1",
-            "ACTION 2",
-            "..."
+            {"action": "INCREASE", "amount": 5},
+            {"action": "DECREASE", "amount": 2},
+            {"action": "DECREASE", "amount": 9},
+            {"action": "INCREASE", "amount": 8}
         ]
     }
 }
-  

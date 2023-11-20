@@ -1,6 +1,7 @@
 import json
 import secrets
 import socket
+import time
 
 
 class User:
@@ -10,24 +11,25 @@ class User:
             config_data = json.load(file)
         return config_data
 
-    def __init__(self, user_id, password, server_ip="localhost", port=12345):
-        self.id = user_id
-        self.password = password
-        self.server_ip = server_ip
-        self.port = port
+    def __init__(self, config_file="user_config.json"):
+        config_data = self.read_config(config_file)
+        self.id = config_data["id"]
+        self.password = config_data["password"]
+        self.server_ip = config_data["server"]["ip"]
+        self.server_port = int(config_data["server"]["port"])
+        self.actions = config_data["actions"]["steps"]
+        self.delay = float(config_data["actions"]["delay"])
 
-    def increase(self):
-        # TODO: Implement increase action
-        pass
+    def increase(self, amount):
+        print(f"User {self.id}: Increased counter by {amount}")
 
-    def decrease(self):
-        # TODO: Implement decrease action
-        pass
+    def decrease(self, amount):
+        print(f"User {self.id}: Decreased counter by {amount}")
 
     def connect_to_server(self):
         try:
             server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            server_socket.connect((self.server_ip, int(self.port)))
+            server_socket.connect((self.server_ip, self.server_port))
 
             # Send registration data to the server
             registration_data = {
@@ -40,43 +42,34 @@ class User:
             response = server_socket.recv(1024).decode('utf-8')
             print(response)
 
-            # TODO: Implement further actions and communication with the server
+            # Perform actions
+            for action in self.actions:
+                time.sleep(self.delay)  # Add delay between actions
 
-            # Close the socket after registration
+                if "INCREASE" in action.get("action", ""):
+                    amount = action.get("amount", 1)  # Read the amount from the JSON file or default to 1
+                    self.increase(amount)
+                elif "DECREASE" in action.get("action", ""):
+                    amount = action.get("amount", 1)  # Read the amount from the JSON file or default to 1
+                    self.decrease(amount)
+                else:
+                    print(f"Unknown action: {action}")
+
+                action_data = json.dumps(action)
+                server_socket.sendall(action_data.encode('utf-8'))
+                print(f"Sent action to server: {action}")
+        # for debugging:
+        #        response = server_socket.recv(1024).decode('utf-8')
+        #        print(response)
             server_socket.close()
+
+            # Close the socket after performing actions
+        #   server_socket.close()
 
         except Exception as e:
             print(f"Error in connect_to_server: {e}")
 
 
-
-def generate_credentials():
-    user_id = secrets.token_hex(8)
-    password = secrets.token_hex(12)
-    return user_id, password
-
-def registration():
-    try:
-        user_id, password = generate_credentials()
-        user_instance = User(user_id, password)
-        user_instance.connect_to_server()
-        return user_id, password
-    except Exception as e:
-        print(f"Error during registration: {e}")
-        return None
-
-
-# Perform registration
-user_id, password = registration()
-
-if not user_id or not password:
-    print("There is an error during registration")
-else:
-    print("Your id is " + user_id)
-    print("Your password is " + password)
-
-# Read config file
-config_data = User.read_config('userInfos/config.json')
-
-# Create a User instance
-user_instance = User(user_id, password, config_data.get("server_ip"), config_data.get("port"))
+if __name__ == "__main__":
+    user_instance = User("userInfos/config.json")
+    user_instance.connect_to_server()
