@@ -31,26 +31,24 @@ class User:
             server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             server_socket.connect((self.server_ip, self.server_port))
 
-            # Send registration data to the server
             registration_data = {
                 "id": self.id,
                 "password": self.password
             }
             server_socket.sendall(json.dumps(registration_data).encode('utf-8'))
 
-            # Receive and print the server's response
             response = server_socket.recv(1024).decode('utf-8')
             print(response)
 
-            # Perform actions
+
             for action in self.actions:
-                time.sleep(self.delay)  # Add delay between actions
+                time.sleep(self.delay)
 
                 if "INCREASE" in action.get("action", ""):
-                    amount = action.get("amount", 1)  # Read the amount from the JSON file or default to 1
+                    amount = action.get("amount", 1)
                     self.increase(amount)
                 elif "DECREASE" in action.get("action", ""):
-                    amount = action.get("amount", 1)  # Read the amount from the JSON file or default to 1
+                    amount = action.get("amount", 1)
                     self.decrease(amount)
                 else:
                     print(f"Unknown action: {action}")
