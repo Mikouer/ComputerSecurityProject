@@ -1,0 +1,5 @@
+Client test123: Counter changed from 0 to 0
+Client test123: Counter changed from 0 to 5
+Client test123: Counter changed from 5 to 3
+Client test123: Counter changed from 3 to -6
+Client test123: Counter changed from -6 to 2
