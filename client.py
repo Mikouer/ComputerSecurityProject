@@ -9,6 +9,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
 
+
 class User:
     @classmethod
     def read_config(cls, file_path):
@@ -16,11 +17,11 @@ class User:
             config_data = json.load(file)
         return config_data
 
-    def __init__(self):
+    def __init__(self, server_ip, server_port):
         # Read config data
         config_data = self.read_config("userInfos/config.json")
-        self.server_ip = config_data["server"]["ip"]
-        self.server_port = int(config_data["server"]["port"])
+        self.server_ip = server_ip
+        self.server_port = server_port
         self.actions = config_data["actions"]["steps"]
         self.delay = float(config_data["actions"]["delay"])
 
@@ -127,5 +128,8 @@ class User:
 
 
 if __name__ == "__main__":
-    user_instance = User()
+    server_ip = input("Enter server IP: ")
+    server_port = int(input("Enter server port: "))
+
+    user_instance = User(server_ip, server_port)
     user_instance.connect_to_server()
