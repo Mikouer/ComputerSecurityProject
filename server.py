@@ -6,6 +6,7 @@ import select
 import base64
 from cryptography.fernet import Fernet  # Make sure to install cryptography package
 
+
 class Server:
     def __init__(self, host, port):
         self.host = host
@@ -40,7 +41,7 @@ class Server:
 
     def start_server(self):
         self.initialize_server_socket()
-        print(f"Server listening on {self.host}:{self.port}")
+        print(f"Server listening on ******:******")
         try:
             while True:
                 # Use select to check for incoming data with a timeout
@@ -151,6 +152,7 @@ class Server:
         except (FileNotFoundError, KeyError):
             print(f"Error: Unable to read config file {config_path}")
             exit(1)
+
     def log_counter_update(self, client_id, amount):
         try:
             current_value = self.clients[client_id]["counter"]
@@ -167,8 +169,9 @@ class Server:
         except KeyError:
             print(f"Error: Client {client_id} not found.")
 
+    # These two method encrypt,decrypt, is for decrypting json file for method <load_config> , and encrypting id for methond<log_counter_update>
+    # These two method is not relevant to the communication message encryption & decryption.
     def encrypt(self, data):
-        # Use Fernet symmetric encryption for simplicity
         encrypted_data = self.cipher.encrypt(data.encode('utf-8'))
         return base64.urlsafe_b64encode(encrypted_data).decode('utf-8')
 
@@ -208,5 +211,5 @@ class Server:
 
 if __name__ == "__main__":
     server_instance = Server('127.0.0.1', 12345)
-   # server_instance.enable_ssl()  # Enable SSL/TLS
+    # server_instance.enable_ssl()  # Enable SSL/TLS
     server_instance.start_server()

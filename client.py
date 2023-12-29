@@ -1,7 +1,6 @@
 import json
 import socket
 import time
-
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -73,7 +72,6 @@ class User:
                 label=None
             )
         )
-
         # Decode from bytes to string
         decoded_message = original_message.decode('utf-8')
         return decoded_message
