@@ -17,6 +17,9 @@ class Server:
         self.ssl_enabled = False
         self.encryption_key = Fernet.generate_key()
         self.cipher = Fernet(self.encryption_key)
+        self.encryption_key = None
+        self.cipher = None
+        self.load_encryption_key()
 
     def initialize_server_socket(self):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -106,17 +109,48 @@ class Server:
                 client_socket.close()
 
     def check_credentials_match(self, client_id, password):
+        config_data = self.load_config()
+        try:
+            stored_id = config_data["id"]
+            stored_password = config_data["password"]
+            return client_id == stored_id and password == stored_password
+        except KeyError:
+            print(f"Error: Unable to validate credentials for client {client_id}")
+            return False
+
+    def load_counter_log(self):
+        try:
+            with open(self.log_file, 'r', encoding='utf-8') as log:
+                # Read and decrypt the content from the log file
+                log_content = log.read()
+                decrypted_content = self.decrypt(log_content)
+                print(decrypted_content)
+        except FileNotFoundError:
+            print(f"Log file {self.log_file} not found.")
+
+    def load_encryption_key(self):
+        try:
+            with open("encryption_key.key", 'rb') as key_file:
+                self.encryption_key = key_file.read()
+                self.cipher = Fernet(self.encryption_key)
+        except FileNotFoundError:
+            print("Error: Encryption key file not found.")
+            exit(1)
+
+    def load_config(self):
         config_path = "userInfos/config.json"
         try:
             with open(config_path, 'r') as file:
                 config_data = json.load(file)
-            stored_id = config_data["id"]
-            stored_password = config_data["password"]
-            return client_id == stored_id and password == stored_password
+                # Decrypt sensitive information
+                config_data["id"] = self.decrypt(config_data["id"])
+                config_data["password"] = self.decrypt(config_data["password"])
+                config_data["server"]["ip"] = self.decrypt(config_data["server"]["ip"])
+                config_data["server"]["port"] = int(self.decrypt(config_data["server"]["port"]))
+                return config_data
         except (FileNotFoundError, KeyError):
-            print(f"Error: Unable to validate credentials for client {client_id}")
-            return False
-
+            print(f"Error: Unable to read config file {config_path}")
+            exit(1)
     def log_counter_update(self, client_id, amount):
         try:
             current_value = self.clients[client_id]["counter"]
@@ -139,7 +173,6 @@ class Server:
         return base64.urlsafe_b64encode(encrypted_data).decode('utf-8')
 
     def decrypt(self, encrypted_data):
-        # Decrypt the data using the same encryption key
         decrypted_data = self.cipher.decrypt(base64.urlsafe_b64decode(encrypted_data))
         return decrypted_data.decode('utf-8')
 
