@@ -3,6 +3,8 @@ import socket
 import threading
 import ssl
 import select
+import base64
+from cryptography.fernet import Fernet  # Make sure to install cryptography package
 
 class Server:
     def __init__(self, host, port):
@@ -13,6 +15,8 @@ class Server:
         self.server_socket = None
         self.failed_login_attempts = {}
         self.ssl_enabled = False
+        self.encryption_key = Fernet.generate_key()
+        self.cipher = Fernet(self.encryption_key)
 
     def initialize_server_socket(self):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -117,12 +121,27 @@ class Server:
         try:
             current_value = self.clients[client_id]["counter"]
             new_value = current_value + amount
+
+            # Encrypt the client_id before writing to the log
+            encrypted_client_id = self.encrypt(client_id)
+
             with open(self.log_file, 'a', encoding='utf-8') as log:
-                log.write(f"Client {client_id}: Counter changed from {current_value} to {new_value}\n")
+                log.write(f"Client {encrypted_client_id}: Counter changed from {current_value} to {new_value}\n")
+
             self.clients[client_id]["counter"] = new_value
 
         except KeyError:
             print(f"Error: Client {client_id} not found.")
+
+    def encrypt(self, data):
+        # Use Fernet symmetric encryption for simplicity
+        encrypted_data = self.cipher.encrypt(data.encode('utf-8'))
+        return base64.urlsafe_b64encode(encrypted_data).decode('utf-8')
+
+    def decrypt(self, encrypted_data):
+        # Decrypt the data using the same encryption key
+        decrypted_data = self.cipher.decrypt(base64.urlsafe_b64decode(encrypted_data))
+        return decrypted_data.decode('utf-8')
 
     def check_failed_login(self, client_id):
         max_failed_attempts = 3
