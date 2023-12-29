@@ -1,25 +1,17 @@
 import json
 import socket
 import threading
-import ssl
+
 
 class Server:
     def __init__(self, host, port):
         self.host = host
         self.port = port
-        self.clients_lock = threading.Lock()
         self.clients = {}  # Store registered clients
         self.log_file = "counter_log.txt"  # Log file to record changes to counters
 
         # Create and bind the server socket
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        # wrap socket with SSL/TLS
-        # note: we need a valid certificate (server_cert.pem) and private key (server_key.pem) files for the SSL/TLS configuration
-        context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-        context.load_cert_chain(certfile="server_cert.pem", keyfile="server_key.pem")
-        self.server_socket = context.wrap_socket(self.server_socket, server_side=True)
-
         self.server_socket.bind((self.host, self.port))
         self.server_socket.listen()
 
@@ -88,7 +80,7 @@ class Server:
             # Calculate the new counter value
             new_value = current_value + amount
             # Log the change to the counter in the log file
-            with open(self.log_file, 'a', encoding='utf-8') as log:
+            with open(self.log_file, 'a') as log:
                 log.write(f"Client {client_id}: Counter changed from {current_value} to {new_value}\n")
 
             # Update the counter value in the clients dictionary
