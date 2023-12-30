@@ -6,6 +6,12 @@ import select
 import base64
 from cryptography.fernet import Fernet  # Make sure to install cryptography package
 
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
+
 
 class Server:
     def __init__(self, host, port):
@@ -39,9 +45,53 @@ class Server:
         if self.server_socket:
             self.server_socket.close()
 
+    def generateKeys(self):
+        # Generate an RSA Key
+        private_key = rsa.generate_private_key(
+            public_exponent=65537,
+            key_size=3072,
+            backend=default_backend()
+        )
+
+        # Get the Public Key from the Private Key
+        public_key = private_key.public_key()
+        self.public_key = public_key
+        self.private_key = private_key
+
+    def encrypt(message, public_key):
+        # Message to be encrypted
+        message = message.encode('utf-8')
+
+        # Encrypting the message
+        encrypted = public_key.encrypt(
+            message,
+            padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None
+            )
+        )
+        return encrypted
+
+    def decrypt(encrypted, private_key):
+        # Decrypting the message
+        original_message = private_key.decrypt(
+            encrypted,
+            padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None
+            )
+        )
+
+        # Decode from bytes to string
+        decoded_message = original_message.decode('utf-8')
+        return decoded_message
+
     def start_server(self):
         self.initialize_server_socket()
         print(f"Server listening on ******:******")
+        self.generateKeys()
         try:
             while True:
                 # Use select to check for incoming data with a timeout
@@ -66,11 +116,22 @@ class Server:
 
     def handle_client(self, client_socket, client_address):
         try:
+            
+            # client_public_key = client_socket.recv(1024)
+            # client_socket.send(self.public_key)
+            
+
+            # testMessage = "test for encryption"
+            # encrypted = self.encrypt(testMessage,client_public_key)
+            # client_socket.send(encrypted)
+
+
             config_data = client_socket.recv(1024).decode('utf-8')
             config = json.loads(config_data)
 
             client_id = config["id"]
             password = config["password"]
+            
             self.clients[client_id] = {"password": password, "counter": 0}
 
             if self.check_failed_login(client_id):
@@ -152,7 +213,6 @@ class Server:
         except (FileNotFoundError, KeyError):
             print(f"Error: Unable to read config file {config_path}")
             exit(1)
-
     def log_counter_update(self, client_id, amount):
         try:
             current_value = self.clients[client_id]["counter"]
@@ -172,6 +232,7 @@ class Server:
     # These two method encrypt,decrypt, is for decrypting json file for method <load_config> , and encrypting id for methond<log_counter_update>
     # These two method is not relevant to the communication message encryption & decryption.
     def encrypt(self, data):
+        # Use Fernet symmetric encryption for simplicity
         encrypted_data = self.cipher.encrypt(data.encode('utf-8'))
         return base64.urlsafe_b64encode(encrypted_data).decode('utf-8')
 
@@ -211,5 +272,5 @@ class Server:
 
 if __name__ == "__main__":
     server_instance = Server('127.0.0.1', 12345)
-    # server_instance.enable_ssl()  # Enable SSL/TLS
+   # server_instance.enable_ssl()  # Enable SSL/TLS
     server_instance.start_server()

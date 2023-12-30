@@ -1,6 +1,7 @@
 import json
 import socket
 import time
+
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -72,14 +73,25 @@ class User:
                 label=None
             )
         )
+
         # Decode from bytes to string
         decoded_message = original_message.decode('utf-8')
         return decoded_message
 
     def connect_to_server(self):
+        #generate keys and send the public key to the server
+        # self.generateKeys()
         try:
             server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             server_socket.connect((self.server_ip, self.server_port))
+            # public_key = self.public_key
+            # server_socket.send(public_key)
+            # response = server_socket.recv(1024)
+            # server_public_key = response
+
+            # response = server_socket.recv(1024)
+            # decrypted = self.decrypt(response,self.private_key)
+            # print(decrypted)
 
             # Send login credentials to the server
             login_data = {
